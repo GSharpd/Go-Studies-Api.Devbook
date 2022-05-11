@@ -1,6 +1,10 @@
 package routes
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
 
 // Represents the API routes
 type Route struct {
@@ -8,4 +12,15 @@ type Route struct {
 	Method                 string
 	Function               func(w http.ResponseWriter, r *http.Request)
 	RequiresAuthentication bool
+}
+
+// Configure all user routes to the given router
+func ConfigureRoutes(r *mux.Router) *mux.Router {
+	routes := usersRoutes
+
+	for _, route := range routes {
+		r.HandleFunc(route.URI, route.Function).Methods(route.Method)
+	}
+
+	return r
 }
