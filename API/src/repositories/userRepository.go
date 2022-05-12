@@ -3,6 +3,7 @@ package repositories
 import (
 	"api/src/models"
 	"database/sql"
+	"fmt"
 )
 
 type user struct {
@@ -33,4 +34,38 @@ func (repo user) Create(user models.User) (uint64, error) {
 	}
 
 	return uint64(lastInsertID), nil
+}
+
+// Gets the specified users in the database with the specified Name or UserName
+func (repo user) Get(nameOrUserName string) ([]models.User, error) {
+	nameOrUserName = fmt.Sprintf("%%%s%%", nameOrUserName) // First % escapes the string, second one is wildcard for the SQL statement, resulting in "%nameOrUserName%"
+
+	rows, err := repo.db.Query(
+		"select id, name, userName, email, createdAt from users where name like ? or userName like ? ",
+		nameOrUserName,
+		nameOrUserName,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.UserName,
+			&user.Email,
+			&user.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
