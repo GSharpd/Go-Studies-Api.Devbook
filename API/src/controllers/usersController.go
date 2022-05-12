@@ -6,9 +6,13 @@ import (
 	"api/src/repositories"
 	"api/src/responses"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // Creates a new user
@@ -74,7 +78,36 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // Gets a specific user from the database
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Gettting user"))
+	parameters := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+
+	user, err := repo.GetUserByID(userID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if user.Name == "" {
+		err = fmt.Errorf("user with ID %d does not exist", userID)
+		responses.ErrorResponse(w, http.StatusNotAcceptable, err)
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusOK, user)
 }
 
 // Updates user information in the database
