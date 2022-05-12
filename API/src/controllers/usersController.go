@@ -28,6 +28,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	repo := repositories.NewUserRepository(db)
 	userID, err := repo.Create(user)
