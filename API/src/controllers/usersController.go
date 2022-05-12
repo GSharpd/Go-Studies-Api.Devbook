@@ -1,0 +1,121 @@
+package controllers
+
+import (
+	"api/src/database"
+	"api/src/models"
+	"api/src/repositories"
+	"api/src/responses"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/gorilla/mux"
+)
+
+// Creates a new user
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	var user models.User
+
+	if err = json.Unmarshal(requestBody, &user); err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err = user.Prepare(); err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+	userID, err := repo.Create(user)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	user.ID = userID
+
+	responses.JSONResponse(w, http.StatusOK, user)
+}
+
+// Gets all users from the database
+func GetUsers(w http.ResponseWriter, r *http.Request) {
+	nameOrUserName := strings.ToLower(r.URL.Query().Get("user"))
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+
+	users, err := repo.Get(nameOrUserName)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusOK, users)
+}
+
+// Gets a specific user from the database
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+
+	user, err := repo.GetUserByID(userID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if user.Name == "" {
+		err = fmt.Errorf("user with ID %d does not exist", userID)
+		responses.ErrorResponse(w, http.StatusNotAcceptable, err)
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusOK, user)
+}
+
+// Updates user information in the database
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Updating user"))
+}
+
+// Deletes a user from the database
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Deleting user"))
+}
