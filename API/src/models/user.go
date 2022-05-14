@@ -17,8 +17,8 @@ type User struct {
 }
 
 // Validates and formats a user
-func (user *User) Prepare() error {
-	if err := user.validate(); err != nil {
+func (user *User) Prepare(stage string) error {
+	if err := user.validate(stage); err != nil {
 		return err
 	}
 
@@ -26,7 +26,7 @@ func (user *User) Prepare() error {
 	return nil
 }
 
-func (user *User) validate() error {
+func (user *User) validate(stage string) error {
 	if user.Name == "" {
 		return errors.New("parameter 'name' is required and cannot be empty")
 	}
@@ -39,7 +39,7 @@ func (user *User) validate() error {
 		return errors.New("parameter 'email' is required and cannot be empty")
 	}
 
-	if user.Password == "" {
+	if stage == "signup" && user.Password == "" {
 		return errors.New("parameter 'password' is required and cannot be empty")
 	}
 
