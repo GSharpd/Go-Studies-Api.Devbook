@@ -10,7 +10,7 @@ type user struct {
 	db *sql.DB
 }
 
-// Creates a new user repository using the given User object
+// Creates a new user repository using the given db object
 func NewUserRepository(db *sql.DB) *user {
 	return &user{db}
 }
@@ -126,4 +126,23 @@ func (repo user) DeleteUser(ID uint64) error {
 	}
 
 	return nil
+}
+
+// Gets an user by is email and returns its ID and hashed password if it exists
+func (repo user) GetUserByEmail(email string) (models.User, error) {
+	row, err := repo.db.Query("select id, password from users where email = ?", email)
+	if err != nil {
+		return models.User{}, err
+	}
+	defer row.Close()
+
+	var user models.User
+
+	if row.Next() {
+		if err = row.Scan(&user.ID, &user.Password); err != nil {
+			return models.User{}, err
+		}
+	}
+
+	return user, nil
 }

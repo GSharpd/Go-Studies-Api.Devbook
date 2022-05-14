@@ -15,6 +15,9 @@ var (
 
 	// Port used to expose the API
 	Port = 0
+
+	// Secret used to sign tokens
+	SecretKey []byte
 )
 
 // Load environment variables into the application
@@ -35,4 +38,6 @@ func LoadConfig() {
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME"),
 	)
+
+	SecretKey = []byte(os.Getenv("SECRET_KEY"))
 }
