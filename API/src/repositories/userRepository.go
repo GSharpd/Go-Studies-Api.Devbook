@@ -97,3 +97,18 @@ func (repo user) GetUserByID(id uint64) (models.User, error) {
 
 	return user, nil
 }
+
+// Updates a user by its ID on the database
+func (repo user) UpdateUser(ID uint64, user models.User) error {
+	statement, err := repo.db.Prepare("update users set name = ?, userName = ?, email = ? where ID = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(user.Name, user.UserName, user.Email, ID); err != nil {
+		return err
+	}
+
+	return nil
+}
