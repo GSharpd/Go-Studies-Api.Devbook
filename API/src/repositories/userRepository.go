@@ -10,7 +10,7 @@ type user struct {
 	db *sql.DB
 }
 
-// Creates a new user repository using the given User object
+// Creates a new user repository using the given db object
 func NewUserRepository(db *sql.DB) *user {
 	return &user{db}
 }
