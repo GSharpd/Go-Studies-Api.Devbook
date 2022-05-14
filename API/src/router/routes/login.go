@@ -6,7 +6,7 @@ import (
 )
 
 var loginRoute = Route{
-	URI:                    "login",
+	URI:                    "/login",
 	Method:                 http.MethodPost,
 	Function:               controllers.Login,
 	RequiresAuthentication: false,
