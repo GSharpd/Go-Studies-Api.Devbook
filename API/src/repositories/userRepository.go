@@ -146,3 +146,19 @@ func (repo user) GetUserByEmail(email string) (models.User, error) {
 
 	return user, nil
 }
+
+// Inserts a follow record for the specified users in the database
+func (repo user) Follow(userID, followerID uint64) error {
+	statement, err := repo.db.Prepare(
+		"insert ignore into followers (userId, followerId) values (?, ?)")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(userID, followerID); err != nil {
+		return err
+	}
+
+	return nil
+}
