@@ -10,3 +10,11 @@ CREATE TABLE users (
     password varchar(30) NOT NULL,
     createdAt timestamp default current_timestamp()
 ) ENGINE=InnoDB;
+
+CREATE TABLE followers(
+    userId int not null, foreign key(userId) references users(id) on delete cascade,
+
+    followerId int not null, foreign key(followerId) references users(id) on delete cascade,
+
+    primary key (userId, followerId)
+) ENGINE=InnoDB;
