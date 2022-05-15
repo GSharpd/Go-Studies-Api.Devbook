@@ -16,7 +16,7 @@ var usersRoutes = []Route{
 		URI:                    "/users",
 		Method:                 http.MethodGet,
 		Function:               controllers.GetUsers,
-		RequiresAuthentication: false,
+		RequiresAuthentication: true,
 	},
 	{
 		URI:                    "/users/{id}",
