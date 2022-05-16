@@ -280,3 +280,69 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
 	responses.JSONResponse(w, http.StatusNoContent, nil)
 }
+
+// Gets the list of followers for the specified user
+func GetFollowers(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+
+	followers, err := repo.GetFollowersByUserID(userID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if len(followers) < 1 {
+		responses.ErrorResponse(w, http.StatusNotFound, errors.New("user has no followers"))
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusOK, followers)
+}
+
+// Gets the list users the specified user follows
+func GetFollows(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+
+	followers, err := repo.GetFollowsByUserID(userID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if len(followers) < 1 {
+		responses.ErrorResponse(w, http.StatusNotFound, errors.New("user doesn't follow anyone"))
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusOK, followers)
+}

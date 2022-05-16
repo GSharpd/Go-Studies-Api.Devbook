@@ -180,3 +180,66 @@ func (repo user) Unfollow(userID, followerID uint64) error {
 
 	return nil
 }
+
+// Gets the followers of the specified userID
+func (repo user) GetFollowersByUserID(userID uint64) ([]models.User, error) {
+	rows, err := repo.db.Query(`
+		select u.id, u.name, u.userName, u.email, u.createdAt from users u
+		inner join followers f on f.followerId = u.id
+		where f.userId = ?
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.UserName,
+			&user.Email,
+			&user.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (repo user) GetFollowsByUserID(userID uint64) ([]models.User, error) {
+	rows, err := repo.db.Query(`
+		select u.id, u.name, u.userName, u.email, u.createdAt from users u
+		inner join followers f on f.userId = u.id
+		where f.followerId = ?
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.UserName,
+			&user.Email,
+			&user.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
