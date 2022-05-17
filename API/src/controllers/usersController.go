@@ -6,6 +6,7 @@ import (
 	"api/src/models"
 	"api/src/repositories"
 	"api/src/responses"
+	"api/src/security"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -345,4 +346,72 @@ func GetFollows(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.JSONResponse(w, http.StatusOK, followers)
+}
+
+// Updates the password for the specified user
+func UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	tokenUserID, err := authentication.ExtractUserID(r)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	parameters := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if userID != tokenUserID {
+		responses.ErrorResponse(w, http.StatusUnauthorized, errors.New("you cannot change another users password"))
+		return
+	}
+
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	var password models.ChangePasswordRequest
+
+	if err = json.Unmarshal(requestBody, &password); err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewUserRepository(db)
+
+	currentPassword, err := repo.GetUserPassword(userID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if err = security.VerifyPassword(currentPassword, password.Current); err != nil {
+		responses.ErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	hashPassword, err := security.Hash(password.New)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err = repo.UpdateUserPassword(userID, string(hashPassword)); err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusNoContent, nil)
 }
