@@ -247,7 +247,7 @@ func (repo user) GetFollowsByUserID(userID uint64) ([]models.User, error) {
 
 // Gets the password for the specified user
 func (repo user) GetUserPassword(userID uint64) (string, error) {
-	row, err := repo.db.Query("select password from users where userId = ?", userID)
+	row, err := repo.db.Query("select password from users where id = ?", userID)
 	if err != nil {
 		return "", err
 	}
@@ -266,7 +266,7 @@ func (repo user) GetUserPassword(userID uint64) (string, error) {
 
 // Updates the password for the specified user in the database
 func (repo user) UpdateUserPassword(userID uint64, newPassword string) error {
-	statement, err := repo.db.Prepare(`update users set password = ? where userId = ?`)
+	statement, err := repo.db.Prepare(`update users set password = ? where id = ?`)
 	if err != nil {
 		return err
 	}
