@@ -32,7 +32,6 @@ CREATE TABLE posts (
     references users(id)
     on delete cascade,
 
-    posterName varchar(50) NOT NULL,
     likes int default 0,
     createdAt timestamp default current_timestamp
 ) ENGINE=InnoDB;
