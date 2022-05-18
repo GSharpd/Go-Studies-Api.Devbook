@@ -9,6 +9,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // Creates a new post
@@ -34,6 +37,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	post.PosterID = tokenUserID
 
+	if err = post.Prepare(); err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
 	db, err := database.ConnectDatabase()
 	if err != nil {
 		responses.ErrorResponse(w, http.StatusInternalServerError, err)
@@ -54,11 +62,53 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 // Gets user feed posts
 func GetPosts(w http.ResponseWriter, r *http.Request) {
+	// parameters := mux.Vars(r)
 
+	// postID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	// if err != nil {
+	// 	responses.ErrorResponse(w, http.StatusBadRequest, err)
+	// 	return
+	// }
+
+	// db, err := database.ConnectDatabase()
+	// if err != nil {
+	// 	responses.ErrorResponse(w, http.StatusInternalServerError, err)
+	// 	return
+	// }
+	// defer db.Close()
+
+	// repo := repositories.NewPostsRepository(db)
+
+	// post, err := repo.GetPostByID
 }
 
 // Gets the specified post by its id
-func GetPostByID(w http.ResponseWriter, r *http.Request) {}
+func GetPostByID(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+
+	postID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewPostsRepository(db)
+
+	post, err := repo.GetPostByID(postID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusOK, post)
+}
 
 // Updates the specified post by its id
 func UpdatePost(w http.ResponseWriter, r *http.Request) {}

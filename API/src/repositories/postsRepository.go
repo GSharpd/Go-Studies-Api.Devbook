@@ -37,3 +37,35 @@ func (repo postsRepo) CreateNewPost(post models.Post) (uint64, error) {
 
 	return uint64(lastInsertID), nil
 }
+
+// Gets a specific post from the database
+func (repo postsRepo) GetPostByID(postID uint64) (models.Post, error) {
+	row, err := repo.db.Query(`
+		select p.*, u.userName from posts p
+		inner join users u on u.id = p.posterId
+		where p.id = ?
+	`, postID,
+	)
+	if err != nil {
+		return models.Post{}, err
+	}
+	defer row.Close()
+
+	var post models.Post
+
+	if row.Next() {
+		if err = row.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.PosterID,
+			&post.Likes,
+			&post.CreatedAt,
+			&post.UserName,
+		); err != nil {
+			return models.Post{}, err
+		}
+	}
+
+	return post, nil
+}
