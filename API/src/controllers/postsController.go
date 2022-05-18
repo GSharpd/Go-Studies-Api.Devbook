@@ -34,6 +34,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	post.PosterID = tokenUserID
 
+	if err = post.Prepare(); err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
 	db, err := database.ConnectDatabase()
 	if err != nil {
 		responses.ErrorResponse(w, http.StatusInternalServerError, err)
