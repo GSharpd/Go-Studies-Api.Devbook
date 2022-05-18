@@ -7,7 +7,6 @@ import (
 	"api/src/repositories"
 	"api/src/responses"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -46,7 +45,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	post.ID, err = repo.CreateNewPost(post)
 	if err != nil {
-		responses.ErrorResponse(w, http.StatusInternalServerError, errors.New("there was an error creating your post"))
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 

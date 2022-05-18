@@ -17,7 +17,7 @@ func NewPostsRepository(db *sql.DB) *postsRepo {
 // Inserts a new post into the database
 func (repo postsRepo) CreateNewPost(post models.Post) (uint64, error) {
 	statement, err := repo.db.Prepare(`
-		inser into posts (title, content, posterId)
+		insert into posts (title, content, posterId)
 		values (?, ?, ?)
 	`)
 	if err != nil {
