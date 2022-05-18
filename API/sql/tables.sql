@@ -1,6 +1,9 @@
 CREATE DATABASE IF NOT EXISTS devbook;
 USE devbook;
+
+DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS followers;
 
 CREATE TABLE users (
     id int auto_increment primary key,
