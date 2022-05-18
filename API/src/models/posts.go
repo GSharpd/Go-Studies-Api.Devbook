@@ -13,9 +13,10 @@ type Post struct {
 	PosterID  uint64    `json:"poster_id,omitempty"`
 	Likes     uint64    `json:"likes"`
 	CreatedAt time.Time `json:"created_at,omitempty"`
+	UserName  string    `json:"user_name,omitempty"`
 }
 
-//
+// Prepares request before persisting it to the database
 func (post *Post) Prepare() error {
 	if err := post.validate(); err != nil {
 		return err
