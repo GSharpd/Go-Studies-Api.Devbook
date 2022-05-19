@@ -127,7 +127,7 @@ func (repo postsRepo) UpdatePost(postID uint64, post models.Post) error {
 
 // Deletes the specified post by its ID
 func (repo postsRepo) DeletePost(postID uint64) error {
-	statement, err := repo.db.Prepare("delete from posts where postID = ?")
+	statement, err := repo.db.Prepare("delete from posts where id = ?")
 	if err != nil {
 		return err
 	}
@@ -138,4 +138,39 @@ func (repo postsRepo) DeletePost(postID uint64) error {
 	}
 
 	return nil
+}
+
+// Gets the specified user posts from the database
+func (repo postsRepo) GetPostsByUserID(userID uint64) ([]models.Post, error) {
+	rows, err := repo.db.Query(`
+		select p.*, u.userName from posts p
+		join users u on u.id = p.posterId 
+		where p.posterId = ?`, userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+
+	for rows.Next() {
+		var post models.Post
+
+		if err = rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.PosterID,
+			&post.Likes,
+			&post.CreatedAt,
+			&post.UserName,
+		); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
 }
