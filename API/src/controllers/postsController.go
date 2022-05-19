@@ -174,7 +174,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses.JSONResponse(w, http.StatusNoContent, post)
+	responses.JSONResponse(w, http.StatusOK, post)
 }
 
 // Deletes the specified post by its id
