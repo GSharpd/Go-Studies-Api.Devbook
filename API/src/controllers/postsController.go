@@ -178,4 +178,45 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deletes the specified post by its id
-func DeletePost(w http.ResponseWriter, r *http.Request) {}
+func DeletePost(w http.ResponseWriter, r *http.Request) {
+	tokenUserID, err := authentication.ExtractUserID(r)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	parameters := mux.Vars(r)
+
+	postID, err := strconv.ParseUint(parameters["id"], 10, 64)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repositories.NewPostsRepository(db)
+
+	existinPost, err := repo.GetPostByID(postID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if existinPost.PosterID != tokenUserID {
+		responses.ErrorResponse(w, http.StatusForbidden, errors.New("you cannot edit someone else's post"))
+		return
+	}
+
+	if err := repo.DeletePost(postID); err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSONResponse(w, http.StatusNoContent, nil)
+}
