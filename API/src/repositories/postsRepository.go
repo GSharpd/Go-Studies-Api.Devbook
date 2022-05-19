@@ -109,3 +109,18 @@ func (repo postsRepo) GetPostsForUser(userID uint64) ([]models.Post, error) {
 
 	return posts, nil
 }
+
+// Updates the specified post by its ID
+func (repo postsRepo) UpdatePost(postID uint64, post models.Post) error {
+	statement, err := repo.db.Prepare("update posts set title = ?, content = ? where id = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(post.Title, post.Content, postID); err != nil {
+		return err
+	}
+
+	return nil
+}
