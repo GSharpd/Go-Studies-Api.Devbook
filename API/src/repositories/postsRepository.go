@@ -69,3 +69,43 @@ func (repo postsRepo) GetPostByID(postID uint64) (models.Post, error) {
 
 	return post, nil
 }
+
+// Gets all the posts for a specific user id
+func (repo postsRepo) GetPostsForUser(userID uint64) ([]models.Post, error) {
+	rows, err := repo.db.Query(`
+		SELECT DISTINCT
+		p.id, p.posterId , u.userName , p.title , p.content , p.likes , p.createdAt 
+		FROM posts p
+		INNER JOIN users u ON u.id = p.posterId 
+		INNER JOIN followers f ON f.followerId  = ?
+		WHERE p.posterId  = ? OR p.posterId  = f.userId 
+		ORDER BY p.id DESC;
+	`, userID, userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+
+	for rows.Next() {
+		var post models.Post
+
+		if err = rows.Scan(
+			&post.ID,
+			&post.PosterID,
+			&post.UserName,
+			&post.Title,
+			&post.Content,
+			&post.Likes,
+			&post.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}

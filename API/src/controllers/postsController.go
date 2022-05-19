@@ -62,24 +62,28 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 // Gets user feed posts
 func GetPosts(w http.ResponseWriter, r *http.Request) {
-	// parameters := mux.Vars(r)
+	tokenUserID, err := authentication.ExtractUserID(r)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
 
-	// postID, err := strconv.ParseUint(parameters["id"], 10, 64)
-	// if err != nil {
-	// 	responses.ErrorResponse(w, http.StatusBadRequest, err)
-	// 	return
-	// }
+	db, err := database.ConnectDatabase()
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
 
-	// db, err := database.ConnectDatabase()
-	// if err != nil {
-	// 	responses.ErrorResponse(w, http.StatusInternalServerError, err)
-	// 	return
-	// }
-	// defer db.Close()
+	repo := repositories.NewPostsRepository(db)
 
-	// repo := repositories.NewPostsRepository(db)
+	posts, err := repo.GetPostsForUser(tokenUserID)
+	if err != nil {
+		responses.ErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
 
-	// post, err := repo.GetPostByID
+	responses.JSONResponse(w, http.StatusOK, posts)
 }
 
 // Gets the specified post by its id
